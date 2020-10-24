@@ -24,7 +24,7 @@ char *sh_read_line(void) {
     } else {
       fprintf(stderr, "Value of errno: %d\n", errno);
       exit(EXIT_FAILURE);
-    }   
+    }
   }
   return line;
 }
@@ -72,9 +72,32 @@ int sh_launch(char **args) {
   return 1;
 }
 
+int sh_redir(char **args, char* file, int mode, int fd) {
+  close(fd);
+  if (open(file, mode) < 0) {
+    fprintf(stderr, "open %s failed\n", file);
+    exit(1);
+  }
+  return sh_launch(args);
+}
+
 int sh_execute(char **args) {
   if (args[0] == NULL) {
     return 1;
+  }
+
+  char **a = args;
+  for(; *a; a++) {
+    switch (**a) {
+      case '<':
+        a = NULL;
+        return sh_redir(args, *(a+1), O_RDONLY, 0);
+        break;
+      case '>':
+        a = NULL;
+        return sh_redir(args, *(a+1), O_WRONLY|O_CREAT, 1);
+        break;
+    }
   }
 
   return sh_launch(args);
