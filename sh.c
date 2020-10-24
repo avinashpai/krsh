@@ -112,6 +112,7 @@ int sh_execute(char **args) {
   char **a = args;
   int pd[2];
 
+
   for(; *a; a++) {
     switch (**a) {
       case '<':
@@ -152,6 +153,17 @@ int sh_execute(char **args) {
        
         return 1;
       }
+        break;
+      case '&':
+        if (*(a+1) == NULL) {
+          if (fork() == 0) {
+            setpgid(0,0);
+            execvp(args[0], args);
+            fprintf(stderr, "exec %s failed\n", args[0]);
+            return 0;
+          }
+          break;
+        }
         break;
     }
   }
