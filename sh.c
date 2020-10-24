@@ -70,7 +70,7 @@ int sh_launch(char **args) {
   if (fork() == 0) {
     execvp(args[0], args);
     fprintf(stderr, "exec %s failed\n", args[0]);
-    return 0;
+    exit(EXIT_FAILURE);
   }
   wait(NULL);
   return 1;
@@ -135,7 +135,7 @@ int sh_execute(char **args) {
           close(pd[1]);
           execvp(args[0], args);
           fprintf(stderr, "exec %s failed\n", args[0]);
-          return 0;
+          exit(EXIT_FAILURE); 
         }
         if (fork() == 0) {
           close(0);
@@ -162,7 +162,7 @@ int sh_execute(char **args) {
           if (id == 0) {
             execvp(args[0], args);
             fprintf(stderr, "exec %s failed\n", args[0]);
-            return 0;
+            exit(EXIT_FAILURE);
           }
           waitpid(-1, &status, WNOHANG);
           return 1;
