@@ -110,6 +110,14 @@ void sh_loop(void) {
   do {
     printf("143A$ ");
     line = sh_read_line();
+
+    if (line[0] == 'c' && line[1] == 'd' && line[2] == ' ') {
+      line[strlen(line)-1] = 0;
+      if (chdir(line+3) < 0)
+          fprintf(stderr, "cannot cd %s\n", line+3);
+      continue;
+    }
+
     args = sh_split_line(line);
     status = sh_execute(args);
 
