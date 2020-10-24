@@ -97,9 +97,9 @@ void add_to_history(const char *cmd) {
 }
 
 void print_history(void) {
-  unsigned i;
-  for (i = 0; i < history_count ; i++) {
-    printf("%s", cmd_history[i]);
+  int i;
+  for (i = history_count - 1; i >= 0; i--) {
+    printf("%d: %s", i+1, cmd_history[i]);
   }
 }
 
