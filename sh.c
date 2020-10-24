@@ -76,7 +76,7 @@ void sh_redir( char* file, int mode, int fd) {
   close(fd);
   if (open(file, mode) < 0) {
     fprintf(stderr, "open %s failed\n", file);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -85,7 +85,12 @@ int sh_execute(char **args) {
     return 1;
   }
 
+  int stdin_copy = dup(0);
+  int stdout_copy = dup(1);
+
   char **a = args;
+  int pd[2];
+
   for(; *a; a++) {
     switch (**a) {
       case '<':
@@ -95,6 +100,44 @@ int sh_execute(char **args) {
       case '>':
         *a = NULL;
         sh_redir(*(a+1), O_WRONLY|O_CREAT, 1);
+        break;
+      case '|': {
+        *a = NULL;
+
+        pipe(pd);
+
+        if (fork() == 0) {
+          close(1);
+          dup(pd[1]);
+          close(pd[0]);
+          close(pd[1]);
+          execvp(args[0], args);
+          fprintf(stderr, "exec %s failed\n", args[0]);
+          return 0;
+        }
+        if (fork() == 0) {
+          close(0);
+          dup(pd[0]);
+          close(pd[0]);
+          close(pd[1]);
+          execvp(*(a+1), a+1);
+          fprintf(stderr, "exec %s failed\n", *(a+1));
+          return 0;
+        }
+
+        close(pd[0]);
+        close(pd[1]);
+        wait(NULL);
+        wait(NULL);
+
+        close(0);
+        close(1);
+        
+        dup2(stdin_copy, 0);
+        dup2(stdout_copy, 1);
+
+        return 1;
+      }
         break;
     }
   }
