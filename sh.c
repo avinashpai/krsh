@@ -12,6 +12,10 @@
 #define SH_TOK_BUFSIZE 64
 #define SH_TOK_DELIM " \t\r\n\a"
 #define SH_TOK_REDIR_DELIM "<>"
+#define MAX_HISTORY_SIZE 1000
+
+static char *cmd_history[MAX_HISTORY_SIZE];
+static unsigned history_count = 0;
 
 char *sh_read_line(void) {
   char *line = NULL;
@@ -77,6 +81,25 @@ void sh_redir( char* file, int mode, int fd) {
   if (open(file, mode) < 0) {
     fprintf(stderr, "open %s failed\n", file);
     exit(EXIT_FAILURE);
+  }
+}
+
+void add_to_history(const char *cmd) {
+  if (history_count < MAX_HISTORY_SIZE)
+      cmd_history[history_count++] = strdup(cmd);
+  else {
+    free(cmd_history[0]);
+    unsigned i;
+    for (i = 1; i < MAX_HISTORY_SIZE; i++)
+        cmd_history[i-1] = cmd_history[i];
+    cmd_history[MAX_HISTORY_SIZE-1] = strdup(cmd);
+  }
+}
+
+void print_history(void) {
+  unsigned i;
+  for (i = 0; i < history_count ; i++) {
+    printf("%s", cmd_history[i]);
   }
 }
 
@@ -150,14 +173,23 @@ void sh_loop(void) {
     printf("143A$ ");
     line = sh_read_line();
 
+    add_to_history(line);
+
     if (line[0] == 'c' && line[1] == 'd' && line[2] == ' ') {
       line[strlen(line)-1] = 0;
       if (chdir(line+3) < 0)
           fprintf(stderr, "cannot cd %s\n", line+3);
       continue;
     }
-
+    
     args = sh_split_line(line);
+
+    if (strcmp(args[0], "history") == 0 && *(args+1) == NULL) {
+      print_history();
+      status = 1;
+      continue;
+    }
+
     status = sh_execute(args);
 
     free(line);
