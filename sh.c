@@ -97,9 +97,9 @@ void add_to_history(const char *cmd) {
 }
 
 void print_history(void) {
-  int i;
-  for (i = history_count - 1; i >= 0; i--) {
-    printf("%d: %s", i+1, cmd_history[i]);
+  unsigned i;
+  for (i = 0; i < history_count; i++) {
+    printf("   %d  %s", i+1, cmd_history[i]);
   }
 }
 
@@ -108,7 +108,6 @@ int sh_execute(char **args) {
   if (args[0] == NULL) {
     return 1;
   }
-
 
   char **a = args;
   int pd[2];
@@ -184,7 +183,7 @@ void sh_loop(void) {
     
     args = sh_split_line(line);
 
-    if (strcmp(args[0], "history") == 0 && *(args+1) == NULL) {
+    if (strcmp(args[0], "history") == 0 && args[1] == NULL) {
       print_history();
       status = 1;
       continue;
