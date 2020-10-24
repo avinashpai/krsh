@@ -81,12 +81,11 @@ void sh_redir( char* file, int mode, int fd) {
 }
 
 int sh_execute(char **args) {
+
   if (args[0] == NULL) {
     return 1;
   }
 
-  int stdin_copy = dup(0);
-  int stdout_copy = dup(1);
 
   char **a = args;
   int pd[2];
@@ -120,27 +119,21 @@ int sh_execute(char **args) {
           dup(pd[0]);
           close(pd[0]);
           close(pd[1]);
-          execvp(*(a+1), a+1);
-          fprintf(stderr, "exec %s failed\n", *(a+1));
-          return 0;
+          return sh_execute(a+1);
         }
 
         close(pd[0]);
         close(pd[1]);
         wait(NULL);
         wait(NULL);
-
-        close(0);
-        close(1);
-        
-        dup2(stdin_copy, 0);
-        dup2(stdout_copy, 1);
-
+ 
+       
         return 1;
       }
         break;
     }
   }
+
 
   return sh_launch(args);
 }
@@ -149,6 +142,9 @@ void sh_loop(void) {
   char *line;
   char **args;
   int status;
+
+  int stdin_save = dup(0);
+  int stdout_save = dup(1);
 
   do {
     printf("143A$ ");
@@ -166,6 +162,9 @@ void sh_loop(void) {
 
     free(line);
     free(args);
+
+    dup2(stdin_save,0);
+    dup2(stdout_save,1);
   } while (status);
 }
 
