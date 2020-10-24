@@ -156,12 +156,16 @@ int sh_execute(char **args) {
         break;
       case '&':
         if (*(a+1) == NULL) {
-          if (fork() == 0) {
-            setpgid(0,0);
+          *a = NULL;
+          int id = fork();
+          int status;
+          if (id == 0) {
             execvp(args[0], args);
             fprintf(stderr, "exec %s failed\n", args[0]);
             return 0;
           }
+          waitpid(-1, &status, WNOHANG);
+          return 1;
           break;
         }
         break;
