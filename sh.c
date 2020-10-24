@@ -72,13 +72,12 @@ int sh_launch(char **args) {
   return 1;
 }
 
-int sh_redir(char **args, char* file, int mode, int fd) {
+void sh_redir( char* file, int mode, int fd) {
   close(fd);
   if (open(file, mode) < 0) {
     fprintf(stderr, "open %s failed\n", file);
     exit(1);
   }
-  return sh_launch(args);
 }
 
 int sh_execute(char **args) {
@@ -91,11 +90,11 @@ int sh_execute(char **args) {
     switch (**a) {
       case '<':
         *a = NULL;
-        return sh_redir(args, *(a+1), O_RDONLY, 0);
+        sh_redir(*(a+1), O_RDONLY, 0);
         break;
       case '>':
         *a = NULL;
-        return sh_redir(args, *(a+1), O_WRONLY|O_CREAT, 1);
+        sh_redir(*(a+1), O_WRONLY|O_CREAT, 1);
         break;
     }
   }
