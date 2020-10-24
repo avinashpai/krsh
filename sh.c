@@ -90,11 +90,11 @@ int sh_execute(char **args) {
   for(; *a; a++) {
     switch (**a) {
       case '<':
-        a = NULL;
+        *a = NULL;
         return sh_redir(args, *(a+1), O_RDONLY, 0);
         break;
       case '>':
-        a = NULL;
+        *a = NULL;
         return sh_redir(args, *(a+1), O_WRONLY|O_CREAT, 1);
         break;
     }
