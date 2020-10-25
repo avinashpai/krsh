@@ -115,6 +115,7 @@ int sh_execute(char **args) {
 
 
   for(; *a; a++) {
+
     switch (**a) {
       case '<':
         *a = NULL;
@@ -169,8 +170,8 @@ int sh_execute(char **args) {
           return 1;
         }
         break;
-    }
-    
+    } 
+   
     if (strchr(*a, '*') || strchr(*a, '?')) {
       glob_t paths;
       int retval;
