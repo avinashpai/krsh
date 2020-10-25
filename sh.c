@@ -171,27 +171,6 @@ int sh_execute(char **args) {
         }
         break;
     } 
-   
-    if (strchr(*a, '*') || strchr(*a, '?')) {
-      glob_t paths;
-      int retval;
-
-      paths.gl_pathc = 0;
-      paths.gl_pathv = NULL;
-      paths.gl_offs = 0;
-
-      retval = glob(*a, GLOB_NOCHECK, NULL, &paths);
-
-      if (retval == 0) {
-        int i;
-        for (i = 0; i < paths.gl_pathc; i++) {
-            *a = paths.gl_pathv[i];
-            sh_execute(args);
-        }
-        globfree(&paths);
-        return 1;
-      }
-    }
   }
 
 
