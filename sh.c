@@ -137,10 +137,8 @@ int sh_execute(char **args) {
     if (strchr(*a, '*') || strchr(*a, '?')) {
         sh_glob(args, a, GLOB_NOCHECK);
         return 1;
-      }
+    }
     
-
-
     switch (**a) {
       case '<':
         *a = NULL;
@@ -194,6 +192,10 @@ int sh_execute(char **args) {
                   waitpid(-1, &status, WNOHANG);
                   return 1;
                 }
+                break;
+      case ';':
+                *a = NULL;
+                return sh_execute(args) && sh_execute(a+1);
                 break;
     } 
   }
