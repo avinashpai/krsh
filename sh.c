@@ -8,14 +8,33 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <glob.h>
 
 #define SH_TOK_BUFSIZE 64
 #define SH_TOK_DELIM " \t\r\n\a"
-#define SH_TOK_REDIR_DELIM "<>"
 #define MAX_HISTORY_SIZE 1000
 
 static char *cmd_history[MAX_HISTORY_SIZE];
 static unsigned history_count = 0;
+
+void add_to_history(const char *cmd) {
+  if (history_count < MAX_HISTORY_SIZE)
+      cmd_history[history_count++] = strdup(cmd);
+  else {
+    free(cmd_history[0]);
+    unsigned i;
+    for (i = 1; i < MAX_HISTORY_SIZE; i++)
+        cmd_history[i-1] = cmd_history[i];
+    cmd_history[MAX_HISTORY_SIZE-1] = strdup(cmd);
+  }
+}
+
+void print_history(void) {
+  unsigned i;
+  for (i = 0; i < history_count; i++) {
+    printf("   %d  %s", i+1, cmd_history[i]);
+  }
+}
 
 char *sh_read_line(void) {
   char *line = NULL;
@@ -84,24 +103,6 @@ void sh_redir( char* file, int mode, int fd) {
   }
 }
 
-void add_to_history(const char *cmd) {
-  if (history_count < MAX_HISTORY_SIZE)
-      cmd_history[history_count++] = strdup(cmd);
-  else {
-    free(cmd_history[0]);
-    unsigned i;
-    for (i = 1; i < MAX_HISTORY_SIZE; i++)
-        cmd_history[i-1] = cmd_history[i];
-    cmd_history[MAX_HISTORY_SIZE-1] = strdup(cmd);
-  }
-}
-
-void print_history(void) {
-  unsigned i;
-  for (i = 0; i < history_count; i++) {
-    printf("   %d  %s", i+1, cmd_history[i]);
-  }
-}
 
 int sh_execute(char **args) {
 
@@ -166,9 +167,29 @@ int sh_execute(char **args) {
           }
           waitpid(-1, &status, WNOHANG);
           return 1;
-          break;
         }
         break;
+    }
+    
+    if (strchr(*a, '*') || strchr(*a, '?')) {
+      glob_t paths;
+      int retval;
+
+      paths.gl_pathc = 0;
+      paths.gl_pathv = NULL;
+      paths.gl_offs = 0;
+
+      retval = glob(*a, GLOB_NOCHECK, NULL, &paths);
+
+      if (retval == 0) {
+        int i;
+        for (i = 0; i < paths.gl_pathc; i++) {
+            *a = paths.gl_pathv[i];
+            sh_execute(args);
+        }
+        globfree(&paths);
+        return 1;
+      }
     }
   }
 
