@@ -103,6 +103,25 @@ void sh_redir( char* file, int mode, int fd) {
   }
 }
 
+void sh_glob(char **args, char **s, int mode) {
+  glob_t paths;
+  int retval;
+
+  paths.gl_pathc = 0;
+  paths.gl_pathv = NULL;
+  paths.gl_offs = 0;
+
+  retval = glob(*s, mode, NULL, &paths);
+
+  if (retval == 0) {
+    int i;
+    for (i = 0; i < paths.gl_pathc; i++) {
+      *s = paths.gl_pathv[i];
+      sh_execute(args);
+    }
+    globfree(&paths);
+  }
+}
 
 int sh_execute(char **args) {
 
@@ -116,25 +135,10 @@ int sh_execute(char **args) {
 
   for(; *a; a++) {
     if (strchr(*a, '*') || strchr(*a, '?')) {
-      glob_t paths;
-      int retval;
-
-      paths.gl_pathc = 0;
-      paths.gl_pathv = NULL;
-      paths.gl_offs = 0;
-
-      retval = glob(*a, GLOB_NOCHECK, NULL, &paths);
-
-      if (retval == 0) {
-        int i;
-        for (i = 0; i < paths.gl_pathc; i++) {
-          *a = paths.gl_pathv[i];
-          sh_execute(args);
-        }
-        globfree(&paths);
+        sh_glob(args, a, GLOB_NOCHECK);
         return 1;
       }
-    }
+    
 
 
     switch (**a) {
