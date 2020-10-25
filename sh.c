@@ -19,12 +19,12 @@ static unsigned history_count = 0;
 
 void add_to_history(const char *cmd) {
   if (history_count < MAX_HISTORY_SIZE)
-      cmd_history[history_count++] = strdup(cmd);
+    cmd_history[history_count++] = strdup(cmd);
   else {
     free(cmd_history[0]);
     unsigned i;
     for (i = 1; i < MAX_HISTORY_SIZE; i++)
-        cmd_history[i-1] = cmd_history[i];
+      cmd_history[i-1] = cmd_history[i];
     cmd_history[MAX_HISTORY_SIZE-1] = strdup(cmd);
   }
 }
@@ -115,6 +115,27 @@ int sh_execute(char **args) {
 
 
   for(; *a; a++) {
+    if (strchr(*a, '*') || strchr(*a, '?')) {
+      glob_t paths;
+      int retval;
+
+      paths.gl_pathc = 0;
+      paths.gl_pathv = NULL;
+      paths.gl_offs = 0;
+
+      retval = glob(*a, GLOB_NOCHECK, NULL, &paths);
+
+      if (retval == 0) {
+        int i;
+        for (i = 0; i < paths.gl_pathc; i++) {
+          *a = paths.gl_pathv[i];
+          sh_execute(args);
+        }
+        globfree(&paths);
+        return 1;
+      }
+    }
+
 
     switch (**a) {
       case '<':
@@ -126,50 +147,50 @@ int sh_execute(char **args) {
         sh_redir(*(a+1), O_WRONLY|O_CREAT, 1);
         break;
       case '|': {
-        *a = NULL;
+                  *a = NULL;
 
-        pipe(pd);
+                  pipe(pd);
 
-        if (fork() == 0) {
-          close(1);
-          dup(pd[1]);
-          close(pd[0]);
-          close(pd[1]);
-          execvp(args[0], args);
-          fprintf(stderr, "exec %s failed\n", args[0]);
-          exit(EXIT_FAILURE); 
-        }
-        if (fork() == 0) {
-          close(0);
-          dup(pd[0]);
-          close(pd[0]);
-          close(pd[1]);
-          return sh_execute(a+1);
-        }
+                  if (fork() == 0) {
+                    close(1);
+                    dup(pd[1]);
+                    close(pd[0]);
+                    close(pd[1]);
+                    execvp(args[0], args);
+                    fprintf(stderr, "exec %s failed\n", args[0]);
+                    exit(EXIT_FAILURE); 
+                  }
+                  if (fork() == 0) {
+                    close(0);
+                    dup(pd[0]);
+                    close(pd[0]);
+                    close(pd[1]);
+                    return sh_execute(a+1);
+                  }
 
-        close(pd[0]);
-        close(pd[1]);
-        wait(NULL);
-        wait(NULL);
- 
-       
-        return 1;
-      }
-        break;
+                  close(pd[0]);
+                  close(pd[1]);
+                  wait(NULL);
+                  wait(NULL);
+
+
+                  return 1;
+                }
+                break;
       case '&':
-        if (*(a+1) == NULL) {
-          *a = NULL;
-          int id = fork();
-          int status;
-          if (id == 0) {
-            execvp(args[0], args);
-            fprintf(stderr, "exec %s failed\n", args[0]);
-            exit(EXIT_FAILURE);
-          }
-          waitpid(-1, &status, WNOHANG);
-          return 1;
-        }
-        break;
+                if (*(a+1) == NULL) {
+                  *a = NULL;
+                  int id = fork();
+                  int status;
+                  if (id == 0) {
+                    execvp(args[0], args);
+                    fprintf(stderr, "exec %s failed\n", args[0]);
+                    exit(EXIT_FAILURE);
+                  }
+                  waitpid(-1, &status, WNOHANG);
+                  return 1;
+                }
+                break;
     } 
   }
 
@@ -194,10 +215,10 @@ void sh_loop(void) {
     if (line[0] == 'c' && line[1] == 'd' && line[2] == ' ') {
       line[strlen(line)-1] = 0;
       if (chdir(line+3) < 0)
-          fprintf(stderr, "cannot cd %s\n", line+3);
+        fprintf(stderr, "cannot cd %s\n", line+3);
       continue;
     }
-    
+
     args = sh_split_line(line);
 
     if (strcmp(args[0], "history") == 0 && args[1] == NULL) {
