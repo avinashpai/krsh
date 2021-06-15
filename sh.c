@@ -17,6 +17,8 @@
 static char *cmd_history[MAX_HISTORY_SIZE];
 static unsigned history_count = 0;
 
+int sh_execute(char**);
+
 void add_to_history(const char *cmd) {
   if (history_count < MAX_HISTORY_SIZE)
     cmd_history[history_count++] = strdup(cmd);
@@ -213,7 +215,7 @@ void sh_loop(void) {
   int stdout_save = dup(1);
 
   do {
-    printf("143A$ ");
+    printf("krsh> ");
     line = sh_read_line();
 
     add_to_history(line);
