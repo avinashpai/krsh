@@ -14,7 +14,7 @@ Krumpet's Shell
 ## Building and Running
 - Set CC in Makefile to compiler of choice (e.g., clang, gcc)
 - To compile
-````
+```
 make
 ```
 
