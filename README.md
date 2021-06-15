@@ -10,3 +10,14 @@ Krumpet's Shell
 - globbing
 - command lists with ;
 - run command in background with &
+
+## Building and Running
+- Set CC in Makefile to compiler of choice (e.g., clang, gcc)
+- To compile
+````
+make
+```
+- To run
+ ```
+ ./krsh
+ ```
