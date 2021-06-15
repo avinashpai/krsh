@@ -18,6 +18,6 @@ Krumpet's Shell
 make
 ```
 - To run
- ```
- ./krsh
- ```
+```
+./krsh
+```
