@@ -214,8 +214,11 @@ void sh_loop(void) {
   int stdin_save = dup(0);
   int stdout_save = dup(1);
 
+  char cwd[256];
+
   do {
-    printf("krsh> ");
+    getcwd(cwd, sizeof(cwd));
+    printf("%s\nkrsh> ", cwd);
     line = sh_read_line();
 
     add_to_history(line);
@@ -224,6 +227,7 @@ void sh_loop(void) {
       line[strlen(line)-1] = 0;
       if (chdir(line+3) < 0)
         fprintf(stderr, "cannot cd %s\n", line+3);
+      status =1 ;
       continue;
     }
 
